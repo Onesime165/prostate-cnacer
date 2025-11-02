@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Résultats Détaillés - Cancer de la Prostate</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .results-table {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-card);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(30, 144, 255, 0.2);
+            border: 1px solid var(--border);
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-light);
+        }
+        
+        th {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            box-shadow: 0 0 15px var(--glow-blue);
+        }
+        
+        tr:hover {
+            background: rgba(30, 144, 255, 0.1);
+        }
+        
+        .prediction-correct {
+            color: var(--success);
+            font-weight: bold;
+            text-shadow: 0 0 10px var(--success);
+        }
+        
+        .prediction-incorrect {
+            color: var(--danger);
+            font-weight: bold;
+            text-shadow: 0 0 10px var(--danger);
+        }
+        
+        .back-button {
+            display: inline-block;
+            margin: 20px 0;
+            padding: 12px 25px;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            border: 2px solid var(--primary-blue);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--glow-blue);
+        }
+        
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px var(--glow-blue);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="ribbon-icon">🎗️</div>
+                <h1>Résultats Détaillés</h1>
+                <p class="subtitle">Analyse Complète des Prédictions</p>
+            </div>
+        </div>
+    </header>
+
+    <div class="container main-content">
+        <a href="/" class="back-button">← Retour à l'accueil</a>
+        
+        {% if metrics %}
+        <div class="metrics-section">
+            <h2>📊 Performance Globale</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value">{{ metrics.accuracy }}%</div>
+                    <div class="metric-label">Précision</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">{{ metrics.sensitivity }}%</div>
+                    <div class="metric-label">Sensibilité</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">{{ metrics.specificity }}%</div>
+                    <div class="metric-label">Spécificité</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">{{ metrics.auc }}</div>
+                    <div class="metric-label">AUC Score</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if results %}
+        <div class="prediction-section">
+            <h2>📋 Détail des Prédictions</h2>
+            <p class="info-text">Tableau complet des prédictions sur l'ensemble du dataset</p>
+            
+            <div class="results-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Rayon</th>
+                            <th>Texture</th>
+                            <th>Périmètre</th>
+                            <th>Aire</th>
+                            <th>Lissage</th>
+                            <th>Compacité</th>
+                            <th>Symétrie</th>
+                            <th>Dim. Frac.</th>
+                            <th>Réel</th>
+                            <th>Prédiction</th>
+                            <th>Erreur</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in results %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ "%.2f"|format(row[0]) }}</td>
+                            <td>{{ "%.2f"|format(row[1]) }}</td>
+                            <td>{{ "%.2f"|format(row[2]) }}</td>
+                            <td>{{ "%.1f"|format(row[3]) }}</td>
+                            <td>{{ "%.4f"|format(row[4]) }}</td>
+                            <td>{{ "%.4f"|format(row[5]) }}</td>
+                            <td>{{ "%.4f"|format(row[6]) }}</td>
+                            <td>{{ "%.5f"|format(row[7]) }}</td>
+                            <td>{{ "Malin" if row[8] == 1 else "Bénin" }}</td>
+                            <td class="{{ 'prediction-correct' if row.prediction_errors == 0 else 'prediction-incorrect' }}">
+                                {{ "Malin" if row.predictions == 1 else "Bénin" }}
+                            </td>
+                            <td>{{ row.prediction_errors }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="prediction-section">
+            <h2>⚠️ Aucun résultat disponible</h2>
+            <p>Veuillez d'abord entraîner le modèle depuis la page d'accueil.</p>
+            <a href="/" class="btn-predict" style="display: inline-block; text-decoration: none; margin-top: 20px;">
+                Retour à l'accueil
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>🎗️ Novembre Bleu 2025 - Sensibilisation au Cancer de la Prostate</p>
+            <p class="footer-note">Cet outil est à but éducatif uniquement.</p>
+        </div>
+    </footer>
+</body>
+</html>
